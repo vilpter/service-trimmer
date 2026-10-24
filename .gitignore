@@ -1,0 +1,31 @@
+# Virtualenv -- rebuild with ./install.sh
+venv/
+venv-*/
+
+# Whisper weights -- downloaded on first run, or rsync'd across (often a symlink)
+models
+
+# Per-service outputs never belong in the repo (audio is large; transcripts can
+# contain names and prayer requests)
+out/
+work/
+*.wav
+*.flac
+*.mp3
+*-sync.json
+*-sermon.json
+*-edges.json
+*-triage.json
+*.srt
+
+# Generated test data
+tests/fixture/
+
+# Local site overrides may hold paths specific to one machine
+service-trimmer.json
+
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/

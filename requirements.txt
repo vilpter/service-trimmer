@@ -1,0 +1,33 @@
+# Portable dependency set for service-trimmer.
+# Verified to resolve to prebuilt wheels on BOTH:
+#   x86_64 / CPython 3.12  (reference build host, glibc 2.4x)
+#   aarch64 / CPython 3.11 (Raspberry Pi OS Bookworm 64-bit, glibc 2.36)
+#   aarch64 / CPython 3.13 (Raspberry Pi OS Trixie 64-bit)
+#
+# Install:  ./install.sh          (or: pip install -r requirements.txt)
+# Exact reproduction of the reference build: requirements-lock.txt
+#
+# NOT a Python package -- install separately:
+#   ffmpeg + ffprobe   Debian/Pi OS:  sudo apt install ffmpeg
+
+# --- core: needed by every stage ------------------------------------------
+# Ranged, not pinned: numpy 2.5.x dropped CPython 3.11, so a hard pin to the
+# reference build's 2.5.1 would fail to install on Pi OS Bookworm. This range resolves
+# to 2.5.1 on py3.12 and 2.4.1 on py3.11.
+numpy>=2.3,<2.6
+
+# --- transcription (service-trimmer transcribe / sermon edge refinement) ---------
+# faster-whisper is pure Python; the heavy lifting is CTranslate2, which ships
+# aarch64 wheels. Deliberately NOT the PyTorch-based whisper package: torch is a
+# ~2 GB install on ARM and the main thing that would make this un-portable.
+faster-whisper==1.2.1
+ctranslate2==4.8.1
+
+# Pulled in by faster-whisper; pinned because these are the compiled ones and
+# the versions that were actually verified to have aarch64 wheels.
+onnxruntime==1.28.0      # Silero VAD runtime
+tokenizers==0.23.1
+av==18.1.0               # PyAV, media decode. NOT 19.x: faster-whisper 1.2.1
+                         # calls av.open(metadata_errors=...), which 19 removed.
+huggingface-hub==1.27.0  # model download
+tqdm==4.70.0

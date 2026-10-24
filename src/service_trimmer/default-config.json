@@ -1,0 +1,176 @@
+{
+  "church_name": "Immanuel Lutheran Church, Alexandria VA",
+  "pastor_names": ["Christopher Esget"],
+
+  "recorder": {
+    "_comment": "Mirrors ilc-Audio-Recorder conventions. Files are named <job_id>_<suffix>.wav where job_id is YYYY_Mon_DD_HH:MM (the recording start, local time). The recorder's own defaults are L/R; this site renamed them in Settings -> Filename. List every suffix that has ever been used for a role.",
+    "channel_suffixes": {
+      "sanctuary": ["Sanctuary", "L"],
+      "ambient": ["Loft", "R"]
+    },
+    "min_service_minutes": 20,
+    "service_hours": [6, 21],
+    "_min_service_comment": "Recordings shorter than this are treated as tests, not services (e.g. 2026_Jan_21_00:23, a 9-minute midnight test).",
+    "silent_dbfs": -80.0,
+    "min_live_share": 0.35,
+    "dead_channel_dbfs": -60.0,
+    "_level_comment": "A channel is dead when it carries signal for less than min_live_share of the program window, or its 95th-percentile level is below dead_channel_dbfs (2026-07-26 sanctuary feed: live ~10% of the service). Below silent_dbfs on every channel the recorder captured nothing (2026-01-25: -91 dBFS throughout)."
+  },
+
+  "schedule": {
+    "_comment": "Service times by era. Used by `service-trimmer schedule` to check that each recording window actually contains a service, and to recommend recorder schedule changes.",
+    "eras": [
+      {
+        "effective": "2026-01-01",
+        "label": "single Sunday Divine Service",
+        "services": [{"weekday": "Sun", "time": "10:00", "name": "Divine Service"}],
+        "source": "inferred from the recordings: program audio starts 8-15 min after the 09:40 recorder start every week through 2026-09-06"
+      },
+      {
+        "effective": "2026-09-13",
+        "label": "two Sunday Divine Services",
+        "services": [
+          {"weekday": "Sun", "time": "08:00", "name": "Early Divine Service"},
+          {"weekday": "Sun", "time": "10:30", "name": "Late Divine Service"}
+        ],
+        "source": "immanuelalexandria.org: 'New Sunday Schedule begins on September 13, 2026: 8:00 AM Divine Service, 9:15 AM Adult Scripture Study / Sunday School, 10:30 AM Divine Service'"
+      }
+    ],
+    "lead_minutes": 15,
+    "tail_minutes": 15,
+    "default_service_minutes": 100
+  },
+
+  "vocabulary_prompt": "A Sunday morning Divine Service at Immanuel Lutheran Church in Alexandria, Virginia. Terms: Scripture, Gospel, Epistle, Psalm, Corinthians, Thessalonians, Deuteronomy, Philippians, benediction, doxology, offertory, absolution, Eucharist, liturgy, catechism, congregation, hymn, narthex, lectionary, Advent, Lent, Epiphany, Pentecost, Evangelical Lutheran. The preacher is Pastor Christopher Esget of Immanuel Lutheran Church.",
+
+  "transcribe": {
+    "model": "auto",
+    "_model_comment": "auto = small.en on a Raspberry Pi (ARM), medium.en on a PC. Or name one: tiny.en, base.en, small.en, medium.en.",
+    "model_dir": null,
+    "threads": "auto"
+  },
+
+  "mix": {
+    "layout": "mono",
+    "gain_sanctuary_db": 0.0,
+    "gain_ambient_db": -12.0,
+    "preserve_acoustic_delay_ms": "auto",
+    "acoustic_max_ms": 150.0,
+    "_delay_note": "auto = keep the whole measured offset, because these two channels are sample-locked (0 ppm) so the offset is pure pulpit->loft propagation. It varies per service (52.85 ms on 08-09, 51.3 ms on 02-08). An offset above acoustic_max_ms means a recorder genuinely started late; only that excess is removed."
+  },
+
+  "sync": {
+    "step_s": 300.0,
+    "max_offset_s": 5.0,
+    "quiet_below_channel_p90_db": 30.0,
+    "_quiet_comment": "A window is 'quiet' when it is this far below the channel's own 90th-percentile window level. Relative, not absolute: an absolute -50 dBFS gate rejected every window of a service recorded at low gain."
+  },
+
+  "sermon": {
+    "ratio_threshold_db": "auto",
+    "silence_floor_db": -65.0,
+    "silence_range_db": 40.0,
+    "smooth_seconds": 21.0,
+    "merge_gap_seconds": 30.0,
+    "min_sermon_seconds": 300.0,
+    "typical_minutes": [6, 35],
+    "candidate_merge_gap_seconds": 150.0,
+    "marker_radius_seconds": 240.0,
+    "_merge_gap_note": "Keep merge_gap_seconds at 30. 120 merged the sermon FORWARD into a reception/baptism rite on 2026-08-09. Adjacent runs are instead offered as merged *candidates* and must win on liturgical evidence (closing formula near the merged end).",
+    "density_words_per_second": 1.2,
+    "_density_comment": "Single-channel mode only: transcript speech density that counts as preaching."
+  },
+
+  "edges": {
+    "_comment": "Edge refinement: re-transcribe a few minutes around each candidate boundary with no VAD and read the liturgy precisely. The prompt must stay neutral -- putting liturgical sentences in it makes Whisper hallucinate exactly those sentences over hymns.",
+    "enabled": true,
+    "model": null,
+    "prompt": "A sermon preached at Immanuel Lutheran Church in Alexandria, Virginia, by Pastor Christopher Esget.",
+    "start_window": [-150.0, 60.0],
+    "end_window": [-150.0, 120.0],
+    "max_lead_in_seconds": 90.0,
+    "music_min_seconds": 6.0,
+    "music_margin_db": 8.0,
+    "response_margin_db": 5.0,
+    "response_search_seconds": 3.0,
+    "response_max_seconds": 5.0,
+    "amen_allowance_seconds": 2.0,
+    "amen_allowance_ambient_seconds": 1.0,
+    "next_speaker_gap_seconds": 0.15,
+    "pre_roll_seconds": 0.35,
+    "post_roll_seconds": 0.5,
+    "max_seconds_per_word": 1.2,
+    "after_sermon_search": [-60.0, 120.0],
+    "closing_search_before_end": 150.0
+  },
+
+  "liturgy": {
+    "_comment": "Regexes over a normalised transcript: lowercase, punctuation removed, apostrophes dropped, single spaces. 'kind' is reported as evidence. Validated against 21 services from 2026-02 to 2026-08.",
+    "opening": [
+      {"kind": "invocation", "re": "\\b(in )?(the )?name of the father\\b.{0,60}?\\bholy (spirit|ghost)\\b( amen\\b)?"},
+      {"kind": "invocation", "re": "\\bthe father (and )?(of )?the son\\b.{0,30}?\\bholy (spirit|ghost)\\b( amen\\b)?"},
+      {"kind": "easter_acclamation", "re": "\\b((alleluia|hallelujah) )?christ is risen\\b( (he is )?risen indeed\\b)?( (alleluia|hallelujah)\\b)?"},
+      {"kind": "greeting", "re": "\\bgrace (be )?(to you )?and peace\\b.{0,80}?\\b(jesus christ|our father|our lord)\\b( amen\\b)?"},
+      {"kind": "greeting", "re": "\\b(grace|praise) mercy and peace\\b"},
+      {"kind": "prayer", "re": "\\blet the words of my mouth\\b"},
+      {"kind": "prayer", "re": "\\bsanctify (us|them) (in|by) (the|thy|your) truth\\b"},
+      {"kind": "prayer", "re": "\\blet us pray\\b"},
+      {"kind": "name_of_jesus", "re": "\\bin (the )?name of jesus\\b( amen\\b)?"}
+    ],
+    "closing": [
+      {"kind": "benediction", "re": "\\bpeace of (god|christ)\\b.{0,140}?\\bchrist jesus\\b( our lord\\b)?( (un)?to life everlasting\\b)?( amen\\b)?"},
+      {"kind": "benediction", "re": "\\bkeep (and guard )?your hearts and minds in christ jesus\\b( (un)?to life everlasting\\b)?( amen\\b)?"},
+      {"kind": "benediction", "re": "\\bpeace of (god|christ) (which|that) (transcends|passes|surpasses|passeth)\\b.{0,30}?\\bunderstanding\\b"},
+      {"kind": "name_of_jesus", "re": "\\bin (the )?name of jesus\\b( amen\\b)?"},
+      {"kind": "name_of_jesus", "re": "\\bin jesus name\\b( amen\\b)?"},
+      {"kind": "name_of_jesus", "re": "\\bin his (holy )?name\\b( amen\\b)?"},
+      {"kind": "trinitarian", "re": "\\bname of the father\\b.{0,60}?\\bholy (spirit|ghost)\\b( amen\\b)?"},
+      {"kind": "easter_acclamation", "re": "\\bchrist is risen\\b( (he is )?risen indeed\\b)?( (alleluia|hallelujah)\\b)?"},
+      {"kind": "doxology", "re": "\\b(forever and ever|now and forever|world without end|unto the ages of ages) amen\\b"}
+    ],
+    "after_sermon": [
+      {"kind": "creed", "re": "\\b(we|let us|please) (now )?(stand|rise)\\b.{0,24}?\\b(confess|say|sing)\\b"},
+      {"kind": "creed", "re": "\\blet us confess\\b"},
+      {"kind": "creed", "re": "\\bi believe in (one )?god\\b"},
+      {"kind": "offertory", "re": "\\bthrough (jesus )?christ let us offer\\b"},
+      {"kind": "prayer", "re": "\\blet us pray\\b"},
+      {"kind": "dialogue", "re": "\\bthe lord be with you\\b"},
+      {"kind": "dialogue", "re": "\\blift up your hearts\\b"},
+      {"kind": "anthem", "re": "\\bo say can you see\\b"},
+      {"kind": "transition", "re": "\\bwe (now )?continue with\\b"}
+    ],
+    "_rites_comment": "Rites that can follow the sermon with no hymn between (confirmation, reception of members, installation, farewell blessing). The preacher's voice continues, so the acoustic pass merges them with the sermon; these phrases mark where the sermon ended. Seen 2026-05-31, 07-12, 07-26, 08-09, 08-23.",
+    "rites": [
+      {"kind": "invitation", "re": "\\b(i|id|we) (would |now |d )?(like to |want to )?invite\\b.{0,60}?\\b(forward|to come|to the (rail|altar|front)|up)\\b"},
+      {"kind": "invitation", "re": "\\b(would|could|will) (you )?(please )?come (up|forward)\\b"},
+      {"kind": "invitation", "re": "\\b(please )?join me (at|in) the front\\b"},
+      {"kind": "rite", "re": "\\b(beloved|dearly beloved) in the lord\\b"},
+      {"kind": "rite", "re": "\\bdo you (this day|renounce|intend|promise|accept)\\b"},
+      {"kind": "rite", "re": "\\bif so (then )?(answer|say)\\b"},
+      {"kind": "rite", "re": "\\bi (hereby )?install you\\b"},
+      {"kind": "rite", "re": "\\byou may (now )?return to your (places|seats|pews)\\b"}
+    ],
+    "_before_sermon_comment": "The Gospel reading precedes the sermon (4-11 min before it in 17 of 21 services checked). Used only to score candidates.",
+    "before_sermon": [
+      {"kind": "gospel", "re": "\\bthis is the gospel of the lord\\b"},
+      {"kind": "gospel", "re": "\\bthe (holy )?gospel (of our lord )?(according to|is written in)\\b"},
+      {"kind": "gospel", "re": "\\bpraise (be )?to (thee|you) o christ\\b"}
+    ],
+    "strong_opening": ["invocation", "easter_acclamation", "greeting"],
+    "strong_closing": ["benediction", "name_of_jesus", "easter_acclamation", "doxology"]
+  },
+
+  "extract": {
+    "mp3_bitrate": "128k",
+    "target_lufs": -16.0
+  },
+
+  "reel": {
+    "sermon_seconds": 15.0,
+    "context_seconds": 10.0,
+    "beep_hz": 1000.0,
+    "beep_seconds": 0.5,
+    "voice": "gtts",
+    "_voice_comment": "gtts needs network access at build time. 'none' replaces spoken labels with tone cues (rising pair = start clip, falling pair = end clip)."
+  }
+}

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "service-trimmer"
+version = "1.0.0"
+description = "Post-production for ilc-Audio-Recorder church service recordings: align, mix, transcribe, find and extract the sermon, QC reels, schedule audit."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.3,<2.6"]
+
+[project.optional-dependencies]
+# av is pinned on purpose: faster-whisper 1.2.1 calls av.open(metadata_errors=...),
+# which PyAV 19 removed -- an unpinned av breaks every file transcription.
+# requirements.txt / requirements-lock.txt pin the full verified set.
+asr = ["faster-whisper==1.2.1", "ctranslate2==4.8.1", "av==18.1.0"]
+# gTTS pins click<8.2 for its CLI only (the library never imports click), which
+# clashes with recent huggingface-hub. install.sh --reel installs it --no-deps.
+reel = ["gTTS==2.5.4", "requests>=2.27,<3"]
+
+[project.scripts]
+service-trimmer = "service_trimmer.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+service_trimmer = ["default-config.json"]

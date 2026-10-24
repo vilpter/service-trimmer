@@ -1,0 +1,8 @@
+{
+  "_comment": "Copy to service-trimmer.json (or pass --config) and keep only what you change. Deep-merged over src/service_trimmer/default-config.json.",
+  "transcribe": {"model": "small.en", "threads": 4},
+  "recorder": {
+    "channel_suffixes": {"sanctuary": ["Sanctuary", "L"], "ambient": ["Loft", "R"]}
+  },
+  "reel": {"voice": "none"}
+}

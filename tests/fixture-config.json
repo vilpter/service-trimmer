@@ -1,0 +1,11 @@
+{
+  "_comment": "Config for tests/selftest.py ONLY. The fixture bakes in these exact phrases, so the test must not depend on the site's liturgy tuning in default-config.json.",
+  "vocabulary_prompt": null,
+  "mix": {"preserve_acoustic_delay_ms": 0.0},
+  "edges": {"enabled": false},
+  "liturgy": {
+    "opening": [{"kind": "fixture_open", "re": "\\bturn (with me )?in your bibles?\\b"}],
+    "closing": [{"kind": "trinitarian", "re": "\\bname of the father\\b.{0,60}?\\bholy spirit\\b( amen\\b)?"}],
+    "after_sermon": []
+  }
+}

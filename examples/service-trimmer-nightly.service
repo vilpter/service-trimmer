@@ -1,0 +1,13 @@
+# systemd --user unit. Install:
+#   cp examples/service-trimmer-nightly.{service,timer} ~/.config/systemd/user/
+#   systemctl --user daemon-reload && systemctl --user enable --now service-trimmer-nightly.timer
+[Unit]
+Description=service-trimmer nightly sermon processing
+
+[Service]
+Type=oneshot
+Environment=REPO=%h/service-trimmer
+Environment=AUDIO=%h/recordings
+Environment=WORK=%h/service-trimmer-work
+ExecStart=%h/service-trimmer/examples/nightly.sh
+Nice=10
